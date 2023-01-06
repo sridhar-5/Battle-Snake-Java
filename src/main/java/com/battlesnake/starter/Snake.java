@@ -186,7 +186,7 @@ public class Snake {
             // TODO Using information from 'moveRequest', don't let your Battlesnake pick a
             // move
             // that would hit its own body
-
+			avoidHittingItself(moveRequest, possibleMoves);
             // TODO: Using information from 'moveRequest', don't let your Battlesnake pick a
             // move
             // that would collide with another Battlesnake
@@ -196,24 +196,14 @@ public class Snake {
             // piece of food on the board
 			
             // Choose a random direction to move in
-			try {
-      			FileWriter myWriter = new 		FileWriter("LOGS.txt");
-				for(String str: possibleMoves) {
-  					myWriter.write(str + System.lineSeparator());
-				}
 					
 			LOG.info("Possible Moves {}", possibleMoves);
 			
             final int choice = new Random().nextInt(possibleMoves.size());
             final String move = possibleMoves.get(choice);
-			myWriter.write(move);
 		   
             LOG.info("MOVE {}", move);
             response.put("move", move);
-			 } catch (IOException e) {
-		      System.out.println("An error occurred.");
-		      e.printStackTrace();
-		    }
 			return response;
         }
 
@@ -282,6 +272,30 @@ public class Snake {
 		        return "Sorry, pretty print didn't work";
 		    }
 		}
-    }
 
+		public void avoidHittingItself(JsonNode moveRequest, ArrayList<String> possibleMoves){
+			JsonNode head = moveRequest.get("you").get("head");
+            JsonNode body = moveRequest.get("you").get("body");
+
+			if(checkIfHitsBody(head, "up", body)){
+				possibleMoves.remove("up");
+			}else if(checkIfHitsBody(head, "down", body)){
+				possibleMoves.remove("down");
+			}else if(checkIfHitsBody(head, "right", body)){
+				possibleMoves.remove("right");
+			}else if(checkIfHitsBody(head, "left", body)){
+				possibleMoves.remove("left");
+			}
+		}
+
+		public boolean checkIfHitsBody(JsonNode head, String move, JsonNode body){
+			HashMap<String, Integer> futureHead = new HashMap<String, Integer>();
+			futureHead.put("x", head.get("x").asInt());
+			futureHead.put("y", head.get("y").asInt());
+			if(move == "up"){
+				futureHead.replace("x", head.get("x").asInt() + 1);
+				LOG.info("body {}" , body)
+			}
+		}
+    }
 }
