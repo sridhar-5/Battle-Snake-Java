@@ -13,6 +13,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.io.File; 
+import java.io.IOException;
+import java.io.FileWriter;
 
 import static spark.Spark.port;
 import static spark.Spark.post;
@@ -122,7 +125,13 @@ public class Snake {
          */
         public Map<String, String> start(JsonNode startRequest) {
             LOG.info("START");
-            return EMPTY;
+			Map<String, String> response = new HashMap<String, String>();
+            response.put("apiversion", "1");
+            response.put("author", "");
+            response.put("color", "#888888");
+            response.put("head", "default"); 
+			response.put("tail", "default");
+			return response;
         }
 
         /**
@@ -146,6 +155,7 @@ public class Snake {
 
             try {
                 LOG.info("Data: {}", JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(moveRequest));
+				
             } catch (JsonProcessingException e) {
                 LOG.error("Error parsing payload", e);
             }
@@ -158,10 +168,11 @@ public class Snake {
              * int height = moveRequest.get("board").get("height").asInt();
              * 
              */
-
+			Map<String, String> response = new HashMap<>();
             JsonNode head = moveRequest.get("you").get("head");
             JsonNode body = moveRequest.get("you").get("body");
 
+			
             ArrayList<String> possibleMoves = new ArrayList<>(Arrays.asList("up", "down", "left", "right"));
 
             // Don't allow your Battlesnake to move back in on it's own neck
@@ -170,7 +181,8 @@ public class Snake {
             // TODO: Using information from 'moveRequest', find the edges of the board and
             // don't
             // let your Battlesnake move beyond them board_height = ? board_width = ?
-
+			// AVOID HITTING THE WALLS
+			avoidHittingWalls(moveRequest, possibleMoves);
             // TODO Using information from 'moveRequest', don't let your Battlesnake pick a
             // move
             // that would hit its own body
@@ -182,16 +194,27 @@ public class Snake {
             // TODO: Using information from 'moveRequest', make your Battlesnake move
             // towards a
             // piece of food on the board
-
+			
             // Choose a random direction to move in
+			try {
+      			FileWriter myWriter = new 		FileWriter("LOGS.txt");
+				for(String str: possibleMoves) {
+  					myWriter.write(str + System.lineSeparator());
+				}
+					
+			LOG.info("Possible Moves {}", possibleMoves);
+			
             final int choice = new Random().nextInt(possibleMoves.size());
             final String move = possibleMoves.get(choice);
-
+			myWriter.write(move);
+		   
             LOG.info("MOVE {}", move);
-
-            Map<String, String> response = new HashMap<>();
             response.put("move", move);
-            return response;
+			 } catch (IOException e) {
+		      System.out.println("An error occurred.");
+		      e.printStackTrace();
+		    }
+			return response;
         }
 
         /**
@@ -231,6 +254,34 @@ public class Snake {
             LOG.info("END");
             return EMPTY;
         }
+
+		public void avoidHittingWalls(JsonNode moveRequest, ArrayList<String> possibleMoves){
+			JsonNode head = moveRequest.get("you").get("head");
+            JsonNode body = moveRequest.get("you").get("body");
+
+			int boardHeight = moveRequest.get("board").get("height").asInt();
+			int boardWidth = moveRequest.get("board").get("width").asInt();
+
+			if(head.get("x").asInt() + 1 >= boardWidth){
+				possibleMoves.remove("right");
+			}else if(head.get("x").asInt() - 1 <= 0){
+				possibleMoves.remove("left");
+			}else if(head.get("y").asInt() + 1 >= boardHeight){
+				possibleMoves.remove("up");
+			}else if(head.get("y").asInt() - 1 <= 0){
+				possibleMoves.remove("down");
+			}
+		}
+
+		public String printJsonString(JsonNode jsonNode) {
+		    try {
+		        ObjectMapper mapper = new ObjectMapper();
+		        Object json = mapper.readValue(jsonNode.toString(), Object.class);
+		        return 		mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+		    } catch (Exception e) {
+		        return "Sorry, pretty print didn't work";
+		    }
+		}
     }
 
 }
