@@ -186,7 +186,7 @@ public class Snake {
             // TODO Using information from 'moveRequest', don't let your Battlesnake pick a
             // move
             // that would hit its own body
-			avoidHittingItself(moveRequest, possibleMoves);
+			//avoidHittingItself(moveRequest, possibleMoves);
             // TODO: Using information from 'moveRequest', don't let your Battlesnake pick a
             // move
             // that would collide with another Battlesnake
@@ -277,14 +277,10 @@ public class Snake {
 			JsonNode head = moveRequest.get("you").get("head");
             JsonNode body = moveRequest.get("you").get("body");
 
-			if(checkIfHitsBody(head, "up", body)){
-				possibleMoves.remove("up");
-			}else if(checkIfHitsBody(head, "down", body)){
-				possibleMoves.remove("down");
-			}else if(checkIfHitsBody(head, "right", body)){
-				possibleMoves.remove("right");
-			}else if(checkIfHitsBody(head, "left", body)){
-				possibleMoves.remove("left");
+			for(String direction: possibleMoves){
+				if(checkIfHitsBody(head, direction , body)){
+					possibleMoves.remove(direction);
+				}
 			}
 		}
 
@@ -293,9 +289,43 @@ public class Snake {
 			futureHead.put("x", head.get("x").asInt());
 			futureHead.put("y", head.get("y").asInt());
 			if(move == "up"){
+				futureHead.replace("y", head.get("y").asInt() + 1);
+				LOG.info("future {}", futureHead);
+				for(JsonNode coord: body){
+					if((futureHead.get("x") == coord.get("x").asInt()) && (futureHead.get("y") == coord.get("y").asInt() )){
+						LOG.info("up elim");
+						return true;
+					}
+				}	
+			}else if(move == "down"){
+				futureHead.replace("y", head.get("y").asInt() - 1);
+				LOG.info("future {}", futureHead);
+				for(JsonNode coord: body){
+					if((futureHead.get("x") == coord.get("x").asInt()) && (futureHead.get("y") == coord.get("y").asInt() )){
+						LOG.info("down elim");
+						return true;
+					}
+				}
+			}else if(move == "right"){
 				futureHead.replace("x", head.get("x").asInt() + 1);
-				LOG.info("body {}" , body)
+				LOG.info("future {}", futureHead);
+				for(JsonNode coord: body){
+					if((futureHead.get("x") == coord.get("x").asInt()) && (futureHead.get("y") == coord.get("y").asInt() )){
+						LOG.info("right elim");
+						return true;
+					}
+				}
+			}else if(move == "left"){
+				futureHead.replace("x", head.get("x").asInt() - 1);
+				LOG.info("future {}", futureHead);
+				for(JsonNode coord: body){
+					if((futureHead.get("x") == coord.get("x").asInt()) && (futureHead.get("y") == coord.get("y").asInt() )){
+						LOG.info("left elim");
+						return true;
+					}
+				}
 			}
-		}
-    }
+			return false;
+    	}
+	}
 }
